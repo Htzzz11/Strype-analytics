@@ -1160,6 +1160,7 @@ export default defineComponent({
                     if (selectedDemo) {
                         selectedDemo.demoFile.then((content) => {
                             if (content) {
+                                this.appStore.trackUsedDemo(selectedDemo.name ?? "Demo");
                                 vueComponentsAPIHandler.appComponentAPI?.setStateFromPythonFile(content, selectedDemo.name ?? "Demo", 0, false)
                                     .then(() => this.saveTargetChoice(StrypeSyncTarget.none));
                             }

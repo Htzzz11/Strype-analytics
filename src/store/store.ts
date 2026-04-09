@@ -17,7 +17,6 @@ import { BvTriggerableEvent } from "bootstrap-vue-next";
 import { vueComponentsAPIHandler } from "@/helpers/vueComponentAPI";
 import $ from "jquery";
 import { fetchUserCountry, type UserCountry } from "@/helpers/analyticsCountry";
-import { getBuiltinDemos } from "@/helpers/demos";
 // #v-ifdef MODE == VITE_STANDARD_PYTHON_MODE
 import { actOnTurtleImport } from "@/helpers/editor";
 // #v-endif
@@ -243,9 +242,7 @@ export const useStore = defineStore("app", {
 
             analyticsFrameTypeCounts: {} as Record<string, number>,
 
-            analyticsBuiltinDemoCounts: {} as Record<string, number>,
-
-            analyticsBuiltinDemoTotal: 0,
+            analyticsUsedDemoCounts: {} as Record<string, number>,
         };
     },
 
@@ -766,30 +763,16 @@ export const useStore = defineStore("app", {
             console.log("Frame type counts:", frameTypeCounts);
         },
 
-        async captureBuiltinDemoCounts() {
-            const demoCategories = [
-                "graphics",
-                "turtle",
-                "console",
-                // #v-ifdef MODE == VITE_MICROBIT_MODE
-                "microbit",
-                // #v-endif
-            ];
-            const demoCountsByCategory: Record<string, number> = {};
-            await Promise.all(
-                demoCategories.map(async (category) => {
-                    try {
-                        const demos = await getBuiltinDemos(category);
-                        demoCountsByCategory[category] = demos.length;
-                    }
-                    catch {
-                        demoCountsByCategory[category] = 0;
-                    }
-                })
-            );
-            this.analyticsBuiltinDemoCounts = demoCountsByCategory;
-            this.analyticsBuiltinDemoTotal = Object.values(demoCountsByCategory).reduce((acc, count) => acc + count, 0);
-            console.log("Builtin demo counts:", demoCountsByCategory, "Total:", this.analyticsBuiltinDemoTotal);
+        trackUsedDemo(demoName: string) {
+            const cleanDemoName = demoName.trim();
+            if (cleanDemoName.length === 0) {
+                return;
+            }
+            if (this.analyticsUsedDemoCounts == undefined) {
+                this.analyticsUsedDemoCounts = {};
+            }
+            this.analyticsUsedDemoCounts[cleanDemoName] = (this.analyticsUsedDemoCounts[cleanDemoName] ?? 0) + 1;
+            console.log("Used demo counts:", this.analyticsUsedDemoCounts);
         },
 
         updateKeyModifiers(e: KeyboardEvent | MouseEvent) {
