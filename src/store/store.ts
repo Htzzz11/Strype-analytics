@@ -242,9 +242,9 @@ export const useStore = defineStore("app", {
 
             analyticsFrameTypeCounts: {} as Record<string, number>,
 
-            analyticsUsedBuiltinDemoCounts: {} as Record<string, number>,
+            analyticsUsedBuiltinDemoCounts: undefined as Record<string, number> | undefined,
 
-            analyticsUsedMediacompDemoCounts: {} as Record<string, number>,
+            analyticsUsedMediacompDemoCounts: undefined as Record<string, number> | undefined,
 
             analyticsStorageLocationCounts: {} as Record<string, number>,
         };
@@ -780,15 +780,15 @@ export const useStore = defineStore("app", {
                     this.analyticsUsedMediacompDemoCounts = {};
                 }
                 this.analyticsUsedMediacompDemoCounts[cleanDemoName] = (this.analyticsUsedMediacompDemoCounts[cleanDemoName] ?? 0) + 1;
+                console.log("Used mediacomp demo counts:", this.analyticsUsedMediacompDemoCounts);
             }
             else {
                 if (this.analyticsUsedBuiltinDemoCounts == undefined) {
                     this.analyticsUsedBuiltinDemoCounts = {};
                 }
                 this.analyticsUsedBuiltinDemoCounts[cleanDemoName] = (this.analyticsUsedBuiltinDemoCounts[cleanDemoName] ?? 0) + 1;
+                console.log("Used builtin demo counts:", this.analyticsUsedBuiltinDemoCounts);
             }
-            console.log("Used builtin demo counts:", this.analyticsUsedBuiltinDemoCounts);
-            console.log("Used mediacomp demo counts:", this.analyticsUsedMediacompDemoCounts);
         },
 
         trackStorageLocation(target: StrypeSyncTarget) {
