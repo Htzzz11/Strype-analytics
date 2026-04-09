@@ -239,6 +239,14 @@ export const useStore = defineStore("app", {
             analyticsCountryCode: null as string | null,
 
             analyticsCountryName: null as string | null,
+
+            analyticsFrameTypeCounts: {} as Record<string, number>,
+
+            analyticsUsedBuiltinDemoCounts: undefined as Record<string, number> | undefined,
+
+            analyticsUsedMediacompDemoCounts: undefined as Record<string, number> | undefined,
+
+            analyticsStorageLocationCounts: {} as Record<string, number>,
         };
     },
 
@@ -735,7 +743,8 @@ export const useStore = defineStore("app", {
                 }, timeoutMillis);
             }
         },
-
+        
+        // ALL ANALYTICS CAPTURING WILL BE IMPLEMENTED FROM HERE ON OUT
         setAnalyticsCountry(country: UserCountry) {
             this.analyticsCountryCode = country.countryCode;
             this.analyticsCountryName = country.countryName;
@@ -744,7 +753,60 @@ export const useStore = defineStore("app", {
         async initAnalyticsCountry() {
             const country = await fetchUserCountry();
             this.setAnalyticsCountry(country);
-            console.log("User country:", country.countryCode, "Country name:", country.countryName);
+            console.log("Country analytics:", {
+                countryCode: this.analyticsCountryCode,
+                countryName: this.analyticsCountryName,
+            });
+        },
+
+        captureFrameTypes() {
+            const frameTypeCounts: Record<string, number> = {};
+            Object.values(this.frameObjects)
+                .filter((frame) => frame.id > 0)
+                .forEach((frame) => {
+                    frameTypeCounts[frame.frameType.type] = (frameTypeCounts[frame.frameType.type] ?? 0) + 1;
+                });
+            this.analyticsFrameTypeCounts = frameTypeCounts;
+            console.log("Frame type counts:", frameTypeCounts);
+        },
+
+        trackUsedDemo(demoName: string, source: "builtin" | "mediacomp-strype") {
+            const cleanDemoName = demoName.trim();
+            if (cleanDemoName.length === 0) {
+                return;
+            }
+            if (source === "mediacomp-strype") {
+                if (this.analyticsUsedMediacompDemoCounts == undefined) {
+                    this.analyticsUsedMediacompDemoCounts = {};
+                }
+                this.analyticsUsedMediacompDemoCounts[cleanDemoName] = (this.analyticsUsedMediacompDemoCounts[cleanDemoName] ?? 0) + 1;
+                console.log("Used mediacomp demo counts:", this.analyticsUsedMediacompDemoCounts);
+            }
+            else {
+                if (this.analyticsUsedBuiltinDemoCounts == undefined) {
+                    this.analyticsUsedBuiltinDemoCounts = {};
+                }
+                this.analyticsUsedBuiltinDemoCounts[cleanDemoName] = (this.analyticsUsedBuiltinDemoCounts[cleanDemoName] ?? 0) + 1;
+                console.log("Used builtin demo counts:", this.analyticsUsedBuiltinDemoCounts);
+            }
+        },
+
+        trackStorageLocation(target: StrypeSyncTarget) {
+            let locationType: "local" | "cloud" | null = null;
+            if (target == StrypeSyncTarget.fs) {
+                locationType = "local";
+            }
+            else if (target == StrypeSyncTarget.gd || target == StrypeSyncTarget.od) {
+                locationType = "cloud";
+            }
+            if (locationType == null) {
+                return;
+            }
+            if (this.analyticsStorageLocationCounts == undefined) {
+                this.analyticsStorageLocationCounts = {};
+            }
+            this.analyticsStorageLocationCounts[locationType] = (this.analyticsStorageLocationCounts[locationType] ?? 0) + 1;
+            console.log("Storage location counts:", this.analyticsStorageLocationCounts);
         },
 
         updateKeyModifiers(e: KeyboardEvent | MouseEvent) {
@@ -2060,6 +2122,7 @@ export const useStore = defineStore("app", {
                     }
                 );
 
+            this.captureFrameTypes();
             return newFrame.id;
         },
 
