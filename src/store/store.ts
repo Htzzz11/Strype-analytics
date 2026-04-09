@@ -239,6 +239,8 @@ export const useStore = defineStore("app", {
             analyticsCountryCode: null as string | null,
 
             analyticsCountryName: null as string | null,
+
+            analyticsFrameTypeCounts: {} as Record<string, number>,
         };
     },
 
@@ -745,6 +747,17 @@ export const useStore = defineStore("app", {
             const country = await fetchUserCountry();
             this.setAnalyticsCountry(country);
             console.log("User country:", country.countryCode, "Country name:", country.countryName);
+        },
+
+        captureFrameTypes() {
+            const frameTypeCounts: Record<string, number> = {};
+            Object.values(this.frameObjects)
+                .filter((frame) => frame.id > 0)
+                .forEach((frame) => {
+                    frameTypeCounts[frame.frameType.type] = (frameTypeCounts[frame.frameType.type] ?? 0) + 1;
+                });
+            this.analyticsFrameTypeCounts = frameTypeCounts;
+            console.log("Frame type counts:", frameTypeCounts);
         },
 
         updateKeyModifiers(e: KeyboardEvent | MouseEvent) {
@@ -2060,6 +2073,7 @@ export const useStore = defineStore("app", {
                     }
                 );
 
+            this.captureFrameTypes();
             return newFrame.id;
         },
 
