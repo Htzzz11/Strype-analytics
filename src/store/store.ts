@@ -242,7 +242,11 @@ export const useStore = defineStore("app", {
 
             analyticsFrameTypeCounts: {} as Record<string, number>,
 
-            analyticsUsedDemoCounts: {} as Record<string, number>,
+            analyticsUsedBuiltinDemoCounts: {} as Record<string, number>,
+
+            analyticsUsedMediacompDemoCounts: {} as Record<string, number>,
+
+            analyticsStorageLocationCounts: {} as Record<string, number>,
         };
     },
 
@@ -749,7 +753,10 @@ export const useStore = defineStore("app", {
         async initAnalyticsCountry() {
             const country = await fetchUserCountry();
             this.setAnalyticsCountry(country);
-            console.log("User country:", country.countryCode, "Country name:", country.countryName);
+            console.log("Country analytics:", {
+                countryCode: this.analyticsCountryCode,
+                countryName: this.analyticsCountryName,
+            });
         },
 
         captureFrameTypes() {
@@ -763,16 +770,43 @@ export const useStore = defineStore("app", {
             console.log("Frame type counts:", frameTypeCounts);
         },
 
-        trackUsedDemo(demoName: string) {
+        trackUsedDemo(demoName: string, source: "builtin" | "mediacomp-strype") {
             const cleanDemoName = demoName.trim();
             if (cleanDemoName.length === 0) {
                 return;
             }
-            if (this.analyticsUsedDemoCounts == undefined) {
-                this.analyticsUsedDemoCounts = {};
+            if (source === "mediacomp-strype") {
+                if (this.analyticsUsedMediacompDemoCounts == undefined) {
+                    this.analyticsUsedMediacompDemoCounts = {};
+                }
+                this.analyticsUsedMediacompDemoCounts[cleanDemoName] = (this.analyticsUsedMediacompDemoCounts[cleanDemoName] ?? 0) + 1;
             }
-            this.analyticsUsedDemoCounts[cleanDemoName] = (this.analyticsUsedDemoCounts[cleanDemoName] ?? 0) + 1;
-            console.log("Used demo counts:", this.analyticsUsedDemoCounts);
+            else {
+                if (this.analyticsUsedBuiltinDemoCounts == undefined) {
+                    this.analyticsUsedBuiltinDemoCounts = {};
+                }
+                this.analyticsUsedBuiltinDemoCounts[cleanDemoName] = (this.analyticsUsedBuiltinDemoCounts[cleanDemoName] ?? 0) + 1;
+            }
+            console.log("Used builtin demo counts:", this.analyticsUsedBuiltinDemoCounts);
+            console.log("Used mediacomp demo counts:", this.analyticsUsedMediacompDemoCounts);
+        },
+
+        trackStorageLocation(target: StrypeSyncTarget) {
+            let locationType: "local" | "cloud" | null = null;
+            if (target == StrypeSyncTarget.fs) {
+                locationType = "local";
+            }
+            else if (target == StrypeSyncTarget.gd || target == StrypeSyncTarget.od) {
+                locationType = "cloud";
+            }
+            if (locationType == null) {
+                return;
+            }
+            if (this.analyticsStorageLocationCounts == undefined) {
+                this.analyticsStorageLocationCounts = {};
+            }
+            this.analyticsStorageLocationCounts[locationType] = (this.analyticsStorageLocationCounts[locationType] ?? 0) + 1;
+            console.log("Storage location counts:", this.analyticsStorageLocationCounts);
         },
 
         updateKeyModifiers(e: KeyboardEvent | MouseEvent) {

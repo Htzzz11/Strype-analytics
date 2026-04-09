@@ -1116,6 +1116,7 @@ export default defineComponent({
                                 this.appStore.projectLastSaveDate = Date.now();
                                 this.appStore.isEditorContentModified = false;
                                 this.saveTargetChoice(StrypeSyncTarget.fs);
+                                this.appStore.trackStorageLocation(StrypeSyncTarget.fs);
                                 if(saveReason == SaveRequestReason.loadProject || this.requestOpenProjectLater) {
                                     eventBus.emit(CustomEventTypes.saveStrypeProjectDoneForLoad);
                                 }
@@ -1129,6 +1130,7 @@ export default defineComponent({
                             this.appStore.projectLastSaveDate = Date.now();
                             this.appStore.isEditorContentModified = false;
                             this.saveTargetChoice(StrypeSyncTarget.fs);
+                            this.appStore.trackStorageLocation(StrypeSyncTarget.fs);
                             if(saveReason == SaveRequestReason.loadProject || this.requestOpenProjectLater) {
                                 eventBus.emit(CustomEventTypes.saveStrypeProjectDoneForLoad);
                             }
@@ -1149,6 +1151,7 @@ export default defineComponent({
                             }
                             const saveReason = (this.saveAtOtherLocation) ? SaveRequestReason.saveProjectAtOtherLocation : SaveRequestReason.saveProjectAtLocation; 
                             vueComponentsAPIHandler.cloudDriveHandlerComponentAPI?.setSaveFileName(saveFileName);
+                            this.appStore.trackStorageLocation(selectValue);
                             vueComponentsAPIHandler.cloudDriveHandlerComponentAPI?.saveFile(selectValue, saveReason);
                         }, 2000);
                         
@@ -1160,7 +1163,7 @@ export default defineComponent({
                     if (selectedDemo) {
                         selectedDemo.demoFile.then((content) => {
                             if (content) {
-                                this.appStore.trackUsedDemo(selectedDemo.name ?? "Demo");
+                                this.appStore.trackUsedDemo(selectedDemo.name ?? "Demo", selectedDemo.source);
                                 vueComponentsAPIHandler.appComponentAPI?.setStateFromPythonFile(content, selectedDemo.name ?? "Demo", 0, false)
                                     .then(() => this.saveTargetChoice(StrypeSyncTarget.none));
                             }
