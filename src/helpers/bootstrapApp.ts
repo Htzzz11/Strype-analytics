@@ -4,5 +4,6 @@ import { useStore } from "@/store/store";
 export async function bootstrapApp(pinia: Pinia): Promise<void> {
     const store = useStore(pinia);
     await store.initAnalyticsCountry();
+    await store.captureBuiltinDemoCounts();
     store.captureFrameTypes();
 }

@@ -17,6 +17,7 @@ import { BvTriggerableEvent } from "bootstrap-vue-next";
 import { vueComponentsAPIHandler } from "@/helpers/vueComponentAPI";
 import $ from "jquery";
 import { fetchUserCountry, type UserCountry } from "@/helpers/analyticsCountry";
+import { getBuiltinDemos } from "@/helpers/demos";
 // #v-ifdef MODE == VITE_STANDARD_PYTHON_MODE
 import { actOnTurtleImport } from "@/helpers/editor";
 // #v-endif
@@ -241,6 +242,10 @@ export const useStore = defineStore("app", {
             analyticsCountryName: null as string | null,
 
             analyticsFrameTypeCounts: {} as Record<string, number>,
+
+            analyticsBuiltinDemoCounts: {} as Record<string, number>,
+
+            analyticsBuiltinDemoTotal: 0,
         };
     },
 
@@ -737,7 +742,8 @@ export const useStore = defineStore("app", {
                 }, timeoutMillis);
             }
         },
-
+        
+        // ALL ANALYTICS CAPTURING WILL BE IMPLEMENTED FROM HERE ON OUT
         setAnalyticsCountry(country: UserCountry) {
             this.analyticsCountryCode = country.countryCode;
             this.analyticsCountryName = country.countryName;
@@ -758,6 +764,32 @@ export const useStore = defineStore("app", {
                 });
             this.analyticsFrameTypeCounts = frameTypeCounts;
             console.log("Frame type counts:", frameTypeCounts);
+        },
+
+        async captureBuiltinDemoCounts() {
+            const demoCategories = [
+                "graphics",
+                "turtle",
+                "console",
+                // #v-ifdef MODE == VITE_MICROBIT_MODE
+                "microbit",
+                // #v-endif
+            ];
+            const demoCountsByCategory: Record<string, number> = {};
+            await Promise.all(
+                demoCategories.map(async (category) => {
+                    try {
+                        const demos = await getBuiltinDemos(category);
+                        demoCountsByCategory[category] = demos.length;
+                    }
+                    catch {
+                        demoCountsByCategory[category] = 0;
+                    }
+                })
+            );
+            this.analyticsBuiltinDemoCounts = demoCountsByCategory;
+            this.analyticsBuiltinDemoTotal = Object.values(demoCountsByCategory).reduce((acc, count) => acc + count, 0);
+            console.log("Builtin demo counts:", demoCountsByCategory, "Total:", this.analyticsBuiltinDemoTotal);
         },
 
         updateKeyModifiers(e: KeyboardEvent | MouseEvent) {
