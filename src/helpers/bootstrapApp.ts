@@ -7,4 +7,5 @@ export async function bootstrapApp(pinia: Pinia): Promise<void> {
     store.initAnalyticsUserId();
     startSessionTracking(store);
     await store.initAnalyticsCountry();
+    store.captureFrameTypes();
 }

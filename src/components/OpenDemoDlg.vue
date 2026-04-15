@@ -164,10 +164,14 @@ export default defineComponent({
             this.changeDemoDialogCategory(0, this.availableDemos.length > 0 ? this.availableDemos[0].demos: Promise.resolve([]));
         },
 
-        getSelectedDemo() : ({ name : string, demoFile: Promise<string | undefined> } | undefined) {
+        getSelectedDemo() : ({ name : string, demoFile: Promise<string | undefined>, source: "builtin" | "mediacomp-strype" } | undefined) {
             if (this.selectedDemoItemIndex >= 0 && this.selectedDemoItemIndex < this.demosInCurrentCategory.length) {
                 const d = this.demosInCurrentCategory[this.selectedDemoItemIndex];
-                return {name: d.name, demoFile: d.demoFile()};
+                const selectedDemoGroup = this.availableDemos[this.selectedDemoCategoryIndex];
+                const source = (selectedDemoGroup?.type === "Library" && selectedDemoGroup?.name === "mediacomp-strype")
+                    ? "mediacomp-strype"
+                    : "builtin";
+                return {name: d.name, demoFile: d.demoFile(), source};
             }
             return undefined;
         },
