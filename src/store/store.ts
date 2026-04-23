@@ -240,6 +240,14 @@ export const useStore = defineStore("app", {
 
             analyticsCountryName: null as string | null,
 
+            analyticsUserId: "" as string,
+
+            analyticsSessionStartTime: 0 as number,
+
+            analyticsActiveSessionTime: 0 as number,
+
+            analyticsFrameCount: 0 as number,
+
             analyticsFrameTypeCounts: {} as Record<string, number>,
 
             analyticsUsedBuiltinDemoCounts: undefined as Record<string, number> | undefined,
@@ -742,6 +750,16 @@ export const useStore = defineStore("app", {
                     }
                 }, timeoutMillis);
             }
+        },
+
+        initAnalyticsUserId() {
+            const storageKey = "StrypeAnalyticsUserId";
+            let userId = localStorage.getItem(storageKey);
+            if (!userId) {
+                userId = crypto.randomUUID();
+                localStorage.setItem(storageKey, userId);
+            }
+            this.analyticsUserId = userId;
         },
         
         // ALL ANALYTICS CAPTURING WILL BE IMPLEMENTED FROM HERE ON OUT
