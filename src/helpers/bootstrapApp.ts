@@ -5,6 +5,8 @@ import { startSessionTracking } from "@/helpers/sessionTracker";
 export async function bootstrapApp(pinia: Pinia): Promise<void> {
     const store = useStore(pinia);
     store.initAnalyticsUserId();
+    store.initAnalyticsSession();
+    store.initAnalyticsPlatform();
     startSessionTracking(store);
     await store.initAnalyticsCountry();
     store.captureFrameTypes();
