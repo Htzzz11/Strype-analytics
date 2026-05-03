@@ -5,6 +5,11 @@ node_modules
 # local env files
 .env.local
 .env.*.local
+db/.env
+db/ingest-server/.env
+
+# Local ingest dependencies (npm install in db/ingest-server)
+db/ingest-server/node_modules/
 
 # Log files
 npm-debug.log*

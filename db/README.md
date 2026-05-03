@@ -143,4 +143,41 @@ docker compose up -d
 
 Note: this **deletes all your local test data**. That's expected during early development — when the schema stabilises, we'll switch to a proper migrations tool (Knex/Prisma/Flyway, TBD).
 
+---
+
+## 7. Local ingest server (editor → MySQL)
+
+The Strype app does not connect to MySQL. It `POST`s JSON to `VITE_ANALYTICS_INGEST_URL`. For local development, use the tiny Node server in `ingest-server/`, which writes `users`, `sessions`, and `events` to match `init/001_schema.sql`.
+
+### One-time setup
+
+From the repo root:
+
+```
+cd db/ingest-server
+cp .env.example .env
+```
+
+Edit `db/ingest-server/.env` if your MySQL port or password differs from `db/.env` (defaults: host `127.0.0.1`, port `3306`, user `strype`, database `strype_analytics`).
+
+Install dependencies:
+
+```
+npm install
+```
+
+### Run (every dev session)
+
+1. MySQL must be up: `cd db && docker compose up -d`
+2. Ingest: `cd db/ingest-server && npm start`
+3. In the **project root** `.env` (Vite), uncomment `VITE_ANALYTICS_INGEST_URL` and set it to `http://127.0.0.1:8787/` (see the comment above that line in `.env`).
+
+   Restart `npm run serve:python` (or your Vite command) after changing `.env`.
+
+4. Use the editor (run code, save). Then in DBeaver: `SELECT * FROM events ORDER BY record_time DESC LIMIT 20;`
+
+Health check: open `http://127.0.0.1:8787/health` in a browser.
+
+Production: replace this with your friend’s real ingest service; keep the same JSON body shape from the app.
+
 
