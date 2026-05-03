@@ -1117,6 +1117,7 @@ export default defineComponent({
                                 this.appStore.isEditorContentModified = false;
                                 this.saveTargetChoice(StrypeSyncTarget.fs);
                                 this.appStore.trackStorageLocation(StrypeSyncTarget.fs);
+                                this.appStore.requestAnalyticsFlush("save");
                                 if(saveReason == SaveRequestReason.loadProject || this.requestOpenProjectLater) {
                                     eventBus.emit(CustomEventTypes.saveStrypeProjectDoneForLoad);
                                 }
@@ -1131,6 +1132,7 @@ export default defineComponent({
                             this.appStore.isEditorContentModified = false;
                             this.saveTargetChoice(StrypeSyncTarget.fs);
                             this.appStore.trackStorageLocation(StrypeSyncTarget.fs);
+                            this.appStore.requestAnalyticsFlush("save");
                             if(saveReason == SaveRequestReason.loadProject || this.requestOpenProjectLater) {
                                 eventBus.emit(CustomEventTypes.saveStrypeProjectDoneForLoad);
                             }
@@ -1152,6 +1154,7 @@ export default defineComponent({
                             const saveReason = (this.saveAtOtherLocation) ? SaveRequestReason.saveProjectAtOtherLocation : SaveRequestReason.saveProjectAtLocation; 
                             vueComponentsAPIHandler.cloudDriveHandlerComponentAPI?.setSaveFileName(saveFileName);
                             this.appStore.trackStorageLocation(selectValue);
+                            this.appStore.requestAnalyticsFlush("save");
                             vueComponentsAPIHandler.cloudDriveHandlerComponentAPI?.saveFile(selectValue, saveReason);
                         }, 2000);
                         
