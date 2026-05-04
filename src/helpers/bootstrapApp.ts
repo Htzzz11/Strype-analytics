@@ -1,5 +1,5 @@
 import type { Pinia } from "pinia";
-import { useStore } from "@/store/store";
+import { settingsStore, useStore } from "@/store/store";
 import { startSessionTracking } from "@/helpers/sessionTracker";
 
 export async function bootstrapApp(pinia: Pinia): Promise<void> {
@@ -10,4 +10,11 @@ export async function bootstrapApp(pinia: Pinia): Promise<void> {
     startSessionTracking(store);
     await store.initAnalyticsCountry();
     store.captureFrameTypes();
+
+    const settings = settingsStore(pinia);
+    settings.$subscribe((_mutation, state) => {
+        if (typeof state.locale === "string" && state.locale.length > 0) {
+            store.trackAnalyticsLocaleChange(state.locale);
+        }
+    });
 }

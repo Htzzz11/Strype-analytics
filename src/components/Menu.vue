@@ -691,6 +691,7 @@ export default defineComponent({
 
     methods: {
         openLibraryDoc() {
+            this.appStore.trackMenuAction("api_docs");
             // Open library doc in new tab:
             window.open("https://strype.org/doc/library/", "_blank")?.focus();
             // Note: we use a click handler for this rather than a plain link because
@@ -700,15 +701,18 @@ export default defineComponent({
             // to a click handler fixed it, so we'll keep it like that.
         },
         downloadHex() {
+            this.appStore.trackMenuAction("download_hex");
             downloadHex();
         },
 
         downloadPython() {
-            downloadPython(); 
+            this.appStore.trackMenuAction("download_python");
+            downloadPython();
         },
 
         openLoadProjectModal(): void {
-            // For a very strange reason, Bootstrap doesn't link the menu link to the dialog any longer 
+            this.appStore.trackMenuAction("load_project");
+            // For a very strange reason, Bootstrap doesn't link the menu link to the dialog any longer
             // after changing "v-if" to "v-show" on the link (to be able to have the keyboard shortcut working).
             // So we open it manually here...
             // We might need to check, first that a project has been modified and needs to be saved.
@@ -729,6 +733,7 @@ export default defineComponent({
         },
 
         openLoadDemoProjectModal(): void {
+            this.appStore.trackMenuAction("load_demo_open");
             vueComponentsAPIHandler.openDemoDlgComponentAPI?.updateAvailableDemos();
             // For a very strange reason, Bootstrap doesn't link the menu link to the dialog any longer 
             // after changing "v-if" to "v-show" on the link (to be able to have the keyboard shortcut working).
@@ -847,6 +852,7 @@ export default defineComponent({
         },
         
         copySnapshotLink() {
+            this.appStore.trackMenuAction("share_snapshot");
             // Since we made the link content when showing the dialog, all we need to do is format it and copy it to the clipboard:
             navigator.clipboard.writeText(`${window.location}?${sharedStrypeProjectIdKey}=spy:${this.shareContentZippedBase64}`);
 
@@ -854,6 +860,7 @@ export default defineComponent({
         },
 
         copyCloudLink() {
+            this.appStore.trackMenuAction("share_cloud");
             // We only share a project that is saved on a Cloud Drive. Show the user what mode of sharing to use (see details in shareProjectWithMode())
             if(this.canShareProjectViaCloud){
                 this.publicModeProjectSharingLink = "";
@@ -1298,6 +1305,7 @@ export default defineComponent({
         },
 
         resetProject(): void {
+            this.appStore.trackMenuAction("reset_project");
             //resetting the project means removing the WebStorage saved project and reloading the page
             //we emit an event to the App so that handlers are done properly
             this.$emit(CustomEventTypes.appResetProject);
@@ -1415,6 +1423,7 @@ export default defineComponent({
         },
 
         performUndoRedo(isUndo: boolean): void {
+            this.appStore.trackMenuAction(isUndo ? "undo" : "redo");
             this.appStore.undoRedo(isUndo);
         },
 

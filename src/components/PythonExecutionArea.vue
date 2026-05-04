@@ -659,6 +659,7 @@ export default defineComponent({
                     typeof(this.appStore.strypeProjectLocation) === "string",
                     Comlink.proxy((output: string) => {
                         pythonConsole.value = pythonConsole.value + output;
+                        useStore().trackOutputChars(output.length);
                     }),
                     Comlink.proxy((prompt: string) => {
                         sInput(prompt).then(async (s : string) => {
