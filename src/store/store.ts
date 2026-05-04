@@ -268,6 +268,10 @@ export const useStore = defineStore("app", {
             analyticsLocaleChangeCounts: {} as Record<string, number>,
 
             analyticsMenuActionCounts: {} as Record<string, number>,
+
+            analyticsInputCallCount: 0,
+
+            analyticsOutputCharCount: 0,
         };
     },
 
@@ -855,6 +859,8 @@ export const useStore = defineStore("app", {
                 locale: this.analyticsLocale,
                 localeChangeCounts: this.analyticsLocaleChangeCounts,
                 menuActionCounts: this.analyticsMenuActionCounts,
+                inputCallCount: this.analyticsInputCallCount,
+                outputCharCount: this.analyticsOutputCharCount,
             };
         },
 
@@ -892,6 +898,14 @@ export const useStore = defineStore("app", {
 
         trackMenuAction(actionId: string) {
             this.analyticsMenuActionCounts[actionId] = (this.analyticsMenuActionCounts[actionId] ?? 0) + 1;
+        },
+
+        trackInputCall() {
+            this.analyticsInputCallCount += 1;
+        },
+
+        trackOutputChars(charCount: number) {
+            this.analyticsOutputCharCount += charCount;
         },
 
         initAnalyticsLocale(locale: string) {

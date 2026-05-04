@@ -16,8 +16,9 @@ let consoleTextArea: HTMLTextAreaElement = {} as HTMLTextAreaElement;
 let codeExecStateRunningCheckFn: (() => boolean) | undefined = undefined;
 
 // The function used for "output" from Skulpt, to be registered against the Skulpt object
-function outf(text: string) { 
-    consoleTextArea.value = consoleTextArea.value + text; 
+function outf(text: string) {
+    consoleTextArea.value = consoleTextArea.value + text;
+    useStore().trackOutputChars(text.length);
     // Scroll to bottom:
     nextTick(() => {
         consoleTextArea.scrollTop = consoleTextArea.scrollHeight;
@@ -28,8 +29,9 @@ function outf(text: string) {
 // The function is to be registered against the Skulpt object.
 export function sInput(prompt: string) : Promise<string> {
     // When we encounter an input call, we make sure the console has focus (i.e. turtle is not shown, for example)
+    useStore().trackInputCall();
     return new Promise(function(resolve,reject){
-        outf(prompt); 
+        outf(prompt);
         // make the text area enabled to allow the user to type something (if it was disabled)
         const isConsoleTextAreaLocked = consoleTextArea.disabled;
         if(isConsoleTextAreaLocked){
