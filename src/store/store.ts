@@ -262,6 +262,10 @@ export const useStore = defineStore("app", {
             analyticsPlatform: "editor" as "editor" | "microbit",
 
             analyticsLastIngestAt: 0 as number,
+
+            analyticsLocale: "" as string,
+
+            analyticsLocaleChangeCounts: {} as Record<string, number>,
         };
     },
 
@@ -787,6 +791,10 @@ export const useStore = defineStore("app", {
         buildAnalyticsSnapshot(reason: "run" | "save") {
             const frameTypeCounts: Record<string, number> = {};
             const importFrameCounts = {import: 0, fromimport: 0, library: 0};
+            const sectionFrameCounts = {imports: 0, defs: 0, main: 0};
+            const importsContainerId = this.getImportsFrameContainerId;
+            const defsContainerId = this.getDefsFrameContainerId;
+            const mainContainerId = this.getMainCodeFrameContainerId;
             Object.values(this.frameObjects)
                 .filter((frame) => frame.id > 0)
                 .forEach((frame) => {
@@ -800,6 +808,24 @@ export const useStore = defineStore("app", {
                     }
                     else if (frameType === AllFrameTypesIdentifier.library) {
                         importFrameCounts.library += 1;
+                    }
+
+                    let cursor: FrameObject | undefined = frame;
+                    while (cursor) {
+                        const parentId = cursor.parentId;
+                        if (parentId === importsContainerId) {
+                            sectionFrameCounts.imports += 1;
+                            break;
+                        }
+                        if (parentId === defsContainerId) {
+                            sectionFrameCounts.defs += 1;
+                            break;
+                        }
+                        if (parentId === mainContainerId) {
+                            sectionFrameCounts.main += 1;
+                            break;
+                        }
+                        cursor = this.frameObjects[parentId];
                     }
                 });
             const classdefCount = frameTypeCounts[AllFrameTypesIdentifier.classdef] ?? 0;
@@ -815,6 +841,7 @@ export const useStore = defineStore("app", {
                 activeSessionTimeMs: this.analyticsActiveSessionTime,
                 frameTypeCounts,
                 importFrameCounts,
+                sectionFrameCounts,
                 oopSignals: {
                     classdefCount,
                     funcdefCount,
@@ -823,6 +850,8 @@ export const useStore = defineStore("app", {
                 usedBuiltinDemoCounts: this.analyticsUsedBuiltinDemoCounts ?? {},
                 usedMediacompDemoCounts: this.analyticsUsedMediacompDemoCounts ?? {},
                 storageLocationCounts: this.analyticsStorageLocationCounts ?? {},
+                locale: this.analyticsLocale,
+                localeChangeCounts: this.analyticsLocaleChangeCounts,
             };
         },
 
@@ -856,6 +885,21 @@ export const useStore = defineStore("app", {
         setAnalyticsCountry(country: UserCountry) {
             this.analyticsCountryCode = country.countryCode;
             this.analyticsCountryName = country.countryName;
+        },
+
+        initAnalyticsLocale(locale: string) {
+            this.analyticsLocale = locale;
+        },
+
+        trackAnalyticsLocaleChange(newLocale: string) {
+            const previousLocale = this.analyticsLocale;
+            if (!previousLocale || previousLocale === newLocale) {
+                this.analyticsLocale = newLocale;
+                return;
+            }
+            const key = `${previousLocale}->${newLocale}`;
+            this.analyticsLocaleChangeCounts[key] = (this.analyticsLocaleChangeCounts[key] ?? 0) + 1;
+            this.analyticsLocale = newLocale;
         },
 
         async initAnalyticsCountry() {
