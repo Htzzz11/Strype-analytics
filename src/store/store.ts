@@ -17,6 +17,7 @@ import { BvTriggerableEvent } from "bootstrap-vue-next";
 import { vueComponentsAPIHandler } from "@/helpers/vueComponentAPI";
 import $ from "jquery";
 import { fetchUserCountry, type UserCountry } from "@/helpers/analyticsCountry";
+import { Analytics_run_save_flush_ms } from "@/helpers/analyticsConstants";
 // #v-ifdef MODE == VITE_STANDARD_PYTHON_MODE
 import { actOnTurtleImport } from "@/helpers/editor";
 // #v-endif
@@ -255,6 +256,12 @@ export const useStore = defineStore("app", {
             analyticsUsedMediacompDemoCounts: undefined as Record<string, number> | undefined,
 
             analyticsStorageLocationCounts: {} as Record<string, number>,
+
+            analyticsSessionId: "" as string,
+
+            analyticsPlatform: "editor" as "editor" | "microbit",
+
+            analyticsLastIngestAt: 0 as number,
         };
     },
 
@@ -760,6 +767,89 @@ export const useStore = defineStore("app", {
                 localStorage.setItem(storageKey, userId);
             }
             this.analyticsUserId = userId;
+        },
+
+        initAnalyticsSession() {
+            this.analyticsSessionId = (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function")
+                ? crypto.randomUUID()
+                : `sess-${Date.now()}`;
+        },
+
+        initAnalyticsPlatform() {
+            // #v-ifdef MODE == VITE_MICROBIT_MODE
+            this.analyticsPlatform = "microbit";
+            // #v-else
+            const path = (typeof window !== "undefined") ? window.location.pathname.toLowerCase() : "";
+            this.analyticsPlatform = path.includes("microbit") ? "microbit" : "editor";
+            // #v-endif
+        },
+
+        buildAnalyticsSnapshot(reason: "run" | "save") {
+            const frameTypeCounts: Record<string, number> = {};
+            const importFrameCounts = {import: 0, fromimport: 0, library: 0};
+            Object.values(this.frameObjects)
+                .filter((frame) => frame.id > 0)
+                .forEach((frame) => {
+                    const frameType = frame.frameType.type;
+                    frameTypeCounts[frameType] = (frameTypeCounts[frameType] ?? 0) + 1;
+                    if (frameType === AllFrameTypesIdentifier.import) {
+                        importFrameCounts.import += 1;
+                    }
+                    else if (frameType === AllFrameTypesIdentifier.fromimport) {
+                        importFrameCounts.fromimport += 1;
+                    }
+                    else if (frameType === AllFrameTypesIdentifier.library) {
+                        importFrameCounts.library += 1;
+                    }
+                });
+            const classdefCount = frameTypeCounts[AllFrameTypesIdentifier.classdef] ?? 0;
+            const funcdefCount = frameTypeCounts[AllFrameTypesIdentifier.funcdef] ?? 0;
+            return {
+                reason,
+                recordedAt: new Date().toISOString(),
+                platform: this.analyticsPlatform,
+                userId: this.analyticsUserId,
+                sessionId: this.analyticsSessionId,
+                countryCode: this.analyticsCountryCode,
+                countryName: this.analyticsCountryName,
+                activeSessionTimeMs: this.analyticsActiveSessionTime,
+                frameTypeCounts,
+                importFrameCounts,
+                oopSignals: {
+                    classdefCount,
+                    funcdefCount,
+                    oopHint: classdefCount > 0 && funcdefCount > 0,
+                },
+                usedBuiltinDemoCounts: this.analyticsUsedBuiltinDemoCounts ?? {},
+                usedMediacompDemoCounts: this.analyticsUsedMediacompDemoCounts ?? {},
+                storageLocationCounts: this.analyticsStorageLocationCounts ?? {},
+            };
+        },
+
+        requestAnalyticsFlush(reason: "run" | "save") {
+            const ingestUrl = import.meta.env.VITE_ANALYTICS_INGEST_URL?.trim();
+            if (!ingestUrl) {
+                if (import.meta.env.DEV) {
+                    console.debug("[analytics] VITE_ANALYTICS_INGEST_URL not set; skip flush:", reason);
+                }
+                return;
+            }
+            const now = Date.now();
+            if (now - this.analyticsLastIngestAt < Analytics_run_save_flush_ms) {
+                return;
+            }
+            this.analyticsLastIngestAt = now;
+            const payload = this.buildAnalyticsSnapshot(reason);
+            void fetch(ingestUrl, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload),
+                mode: "cors",
+            }).catch(() => {
+                if (import.meta.env.DEV) {
+                    console.debug("[analytics] ingest request failed:", reason);
+                }
+            });
         },
         
         // ALL ANALYTICS CAPTURING WILL BE IMPLEMENTED FROM HERE ON OUT

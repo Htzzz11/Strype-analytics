@@ -1,7 +1,5 @@
 import type { useStore } from "@/store/store";
-
-const TICK_INTERVAL_MS = 30_000; // 30 seconds
-const IDLE_THRESHOLD_MS = 5 * 60_000; // 5 minutes
+import { Analytics_session_idle_threshold_ms, Analytics_session_tick_ms } from "@/helpers/analyticsConstants";
 
 export function startSessionTracking(store: ReturnType<typeof useStore>): void {
     let lastActivityTime = Date.now();
@@ -21,13 +19,13 @@ export function startSessionTracking(store: ReturnType<typeof useStore>): void {
 
     const tick = () => {
         const now = Date.now();
-        if (now - lastActivityTime < IDLE_THRESHOLD_MS) {
+        if (now - lastActivityTime < Analytics_session_idle_threshold_ms) {
             store.analyticsActiveSessionTime += now - lastTickTime;
         }
         lastTickTime = now;
     };
 
-    setInterval(tick, TICK_INTERVAL_MS);
+    setInterval(tick, Analytics_session_tick_ms);
 
     window.addEventListener("beforeunload", () => {
         tick();

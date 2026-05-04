@@ -794,6 +794,7 @@ export default defineComponent({
                     getPythonContent()
                         .then((pyContent) => {                            
                             this.appStore.pythonExecRunningState = PythonExecRunningState.Running;
+                            this.appStore.requestAnalyticsFlush("run");
                             mbSimulator?.postMessage({
                                 "kind": "flash",
                                 "filesystem": {
