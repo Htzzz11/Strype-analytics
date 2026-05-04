@@ -266,6 +266,8 @@ export const useStore = defineStore("app", {
             analyticsLocale: "" as string,
 
             analyticsLocaleChangeCounts: {} as Record<string, number>,
+
+            analyticsMenuActionCounts: {} as Record<string, number>,
         };
     },
 
@@ -852,6 +854,7 @@ export const useStore = defineStore("app", {
                 storageLocationCounts: this.analyticsStorageLocationCounts ?? {},
                 locale: this.analyticsLocale,
                 localeChangeCounts: this.analyticsLocaleChangeCounts,
+                menuActionCounts: this.analyticsMenuActionCounts,
             };
         },
 
@@ -885,6 +888,10 @@ export const useStore = defineStore("app", {
         setAnalyticsCountry(country: UserCountry) {
             this.analyticsCountryCode = country.countryCode;
             this.analyticsCountryName = country.countryName;
+        },
+
+        trackMenuAction(actionId: string) {
+            this.analyticsMenuActionCounts[actionId] = (this.analyticsMenuActionCounts[actionId] ?? 0) + 1;
         },
 
         initAnalyticsLocale(locale: string) {
