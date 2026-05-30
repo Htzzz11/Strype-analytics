@@ -1,8 +1,12 @@
 # Strype Analytics — Local MySQL via Docker
 
+This folder is for the **db branch** (server / private repo). It is **not** intended for the public GitHub application repo. App analytics code may live on `main`; Docker, schema, ingest, and `db/.env` stay here.
+
 This folder spins up a local MySQL 8.0 instance for development and testing of the analytics pipeline. It uses [Docker Compose](https://docs.docker.com/compose/) so the setup is identical on macOS, Windows, and Linux.
 
 Each developer runs their own isolated DB on `localhost`. We don't share data between developers — only the schema (which lives in `init/001_schema.sql` and is checked into git).
+
+**Configuration:** copy `db/.env.example` → `db/.env`. That file holds MySQL credentials, `INGEST_PORT`, and `VITE_ANALYTICS_INGEST_URL` (used by Vite and `ingest-server/`). Do not put the ingest URL in the project root `.env` on this branch.
 
 ---
 
@@ -151,28 +155,14 @@ The Strype app does not connect to MySQL. It `POST`s JSON to `VITE_ANALYTICS_ING
 
 ### One-time setup
 
-From the repo root:
-
-```
-cd db/ingest-server
-cp .env.example .env
-```
-
-Edit `db/ingest-server/.env` if your MySQL port or password differs from `db/.env` (defaults: host `127.0.0.1`, port `3306`, user `strype`, database `strype_analytics`).
-
-Install dependencies:
-
-```
-npm install
-```
+1. `cd db` and `cp .env.example .env` (if you have not already). Set `VITE_ANALYTICS_INGEST_URL` and `INGEST_PORT` to match (default `http://127.0.0.1:8787/` and `8787`).
+2. `cd db/ingest-server && npm install`
 
 ### Run (every dev session)
 
 1. MySQL must be up: `cd db && docker compose up -d`
 2. Ingest: `cd db/ingest-server && npm start`
-3. In the **project root** `.env` (Vite), uncomment `VITE_ANALYTICS_INGEST_URL` and set it to `http://127.0.0.1:8787/` (see the comment above that line in `.env`).
-
-   Restart `npm run serve:python` (or your Vite command) after changing `.env`.
+3. From the **repo root**, run the editor: `npm run serve:python` (Vite reads `VITE_ANALYTICS_INGEST_URL` from `db/.env`). Restart Vite after changing `db/.env`.
 
 4. Use the editor (run code, save). Then in DBeaver: `SELECT * FROM events ORDER BY record_time DESC LIMIT 20;`
 

@@ -112,6 +112,11 @@ export default defineConfig(({mode}) => {
     // Mode for the Strype "platform" (standard Python or for micro:bit)
     // We use environment variables for the possible values (only exception is in the serve/build scripts...)
     const viteEnv = loadEnv(mode, process.cwd(), "VITE_");
+    // db branch: analytics ingest URL lives in db/.env (not root .env) so public app repo stays separate.
+    const dbViteEnv = loadEnv(mode, path.resolve(__dirname, "db"), "VITE_");
+    if (dbViteEnv.VITE_ANALYTICS_INGEST_URL?.trim()) {
+        process.env.VITE_ANALYTICS_INGEST_URL = dbViteEnv.VITE_ANALYTICS_INGEST_URL.trim();
+    }
     const isStandardPython = mode === viteEnv.VITE_STANDARD_PYTHON_MODE;
   
     return {       

@@ -1,7 +1,12 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import cors from "cors";
 import express from "express";
 import mysql from "mysql2/promise";
+
+const ingestServerDir = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(ingestServerDir, "../.env") });
 
 const port = parseInt(process.env.INGEST_PORT || "8787", 10) || 8787;
 
@@ -119,7 +124,7 @@ const server = app.listen(port, () => {
 
 server.on("error", (err) => {
     if (err && err.code === "EADDRINUSE") {
-        console.error(`Port ${port} is already in use. Set INGEST_PORT in db/ingest-server/.env to a free port (e.g. 8788), then update VITE_ANALYTICS_INGEST_URL in the project root .env and restart Vite.`);
+        console.error(`Port ${port} is already in use. Set INGEST_PORT and VITE_ANALYTICS_INGEST_URL in db/.env to a free port (e.g. 8788), then restart ingest and Vite.`);
     }
     else {
         console.error(err);
